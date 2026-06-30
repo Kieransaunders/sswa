@@ -1,7 +1,5 @@
 ---
 description: Close out a merged change — sync its specs into the source of truth, move it to archive, delete the branch, ready the next feature. (mirrors /opsx:archive)
-argument-hint: "[change-name]"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Archive the SSWA change: ${1:-the active change}. Read `single-feature-flow` and

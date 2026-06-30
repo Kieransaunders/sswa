@@ -1,7 +1,5 @@
 ---
 description: Implement the active change to GREEN — turn each failing test green one at a time, checking off tasks. (mirrors /opsx:apply)
-argument-hint: "[change-name]"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Implement the SSWA change: ${1:-the active change under openspec/changes/}.

@@ -1,7 +1,5 @@
 ---
 description: "Full-flow automation: propose + implement + verify in one command. After user accepts the proposal, runs apply and verify automatically without stopping for approval at each step."
-argument-hint: "<change-name or idea>"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Run the complete SSWA feature flow end-to-end: propose → apply → verify.

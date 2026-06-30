@@ -1,7 +1,5 @@
 ---
 description: Pull main, branch, and create a full change proposal — proposal.md, delta specs, optional design, FAILING tests (RED), and tasks. Scaffolds openspec/ on first run. (mirrors /opsx:propose, with a TDD RED step)
-argument-hint: "<change-name or idea>"
-allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Create a complete SSWA change proposal for: $ARGUMENTS

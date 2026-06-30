@@ -1,7 +1,5 @@
 ---
 description: Think through an idea before committing — read the code, weigh options, surface questions. No files written. (mirrors /opsx:explore)
-argument-hint: "<idea or question>"
-allowed-tools: Bash, Read, Grep, Glob, WebFetch
 ---
 
 You are in **explore** mode for SSWA — the equivalent of `/opsx:explore`. This is a
