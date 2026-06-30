@@ -25,6 +25,7 @@ SSWA command on the right.
 |-----------------|-------------------|-------------------------------------------|
 | `/opsx:explore` | `/sswa:explore`   | Think through an idea, read the code, weigh options. No files written. |
 | `/opsx:propose` | `/sswa:propose`   | **Pull main, branch,** write proposal + delta specs + tasks — **plus the failing tests (RED).** Auto-scaffolds `openspec/` on first run. |
+| —               | `/sswa:goal`      | **Full-flow automation:** propose → (await approval) → apply → verify. Chain all three in one session to reduce approval friction. |
 | `/opsx:apply`   | `/sswa:apply`     | Implement to **GREEN**, one failing test at a time. |
 | `/opsx:verify`  | `/sswa:verify`    | Validate implementation against the artifacts and run the full suite — **then push, open the PR, and promote to the test environment.** |
 | `/opsx:sync`    | `/sswa:sync`      | Merge a change's delta specs into the source of truth (`openspec/specs/`). |
@@ -43,12 +44,16 @@ SSWA command on the right.
 /sswa:propose  → pull main → branch sswa/<name> → proposal + delta specs
                → FAILING tests (RED, confirmed failing) → tasks
       │
-      ▼
-/sswa:apply    → implement to GREEN, one test at a time, check off tasks
+      ├─→ /sswa:apply    → implement to GREEN, check off tasks
+      │      │
+      │      ▼
+      │   /sswa:verify   → validate vs artifacts + full suite green
+      │                  → push → open PR → promote to TEST environment
       │
-      ▼
-/sswa:verify   → validate vs artifacts + full suite green
-               → push → open PR → promote to TEST environment → green there
+      └─→ /sswa:goal     (alternative: propose + apply + verify automated in one flow)
+             │           (stops after propose for user approval, then auto-continues)
+             ▼
+      (awaiting review + approval)
       │
       ▼   (PR reviewed + merged to main)
 /sswa:archive  → sync delta specs into openspec/specs/ → archive folder
