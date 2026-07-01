@@ -19,6 +19,9 @@ The command names are OpenSpec's `opsx` set, renamed `sswa:`. The git/environmen
 are folded **into** those commands — SSWA does not invent extra commands for branching,
 PRs, or promotion.
 
+If more than one agent may be active in this repo at once, "new branch" above means a
+**git worktree**, not a checkout in the shared directory — see preflight check 4 below.
+
 ## Preflight — run before any mutating command
 
 Every mutating SSWA command (`/sswa:propose`, `/sswa:apply`, `/sswa:verify`, `/sswa:sync`,
@@ -72,12 +75,33 @@ archived.
   a time. Finish/ship it before starting another?" Then let the user proceed if they
   insist. Do not hard-block.
 
+### 4. Concurrent-agent check (warn, then isolate)
+
+A shared working directory is mutable state: if another agent (or you, in another
+session) might check out a branch or commit in this same directory while this change is
+in flight, one agent's `git checkout`/commit changes the files out from under the other
+mid-edit and branches end up intertwined.
+
+- **Ask or infer** whether another agent/session may touch this repo concurrently. If yes
+  (or unsure and the cost of asking is low), **use a worktree instead of branching in
+  place** for Step 2/3 of `/sswa:propose` below:
+  ```bash
+  git fetch origin
+  git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/main
+  ```
+  Do the rest of propose/apply/verify inside that worktree directory. On archive, remove
+  it (`git worktree remove ../<repo>-<change-name>`) instead of just deleting the branch.
+- **Single-agent, single-session work** can keep branching in place as written below —
+  worktrees are for concurrency isolation, not a mandatory replacement.
+
 ## The loop, step by step
 
 ### Start a feature — `/sswa:propose`
 1. Preflight (expect environment: **development**). Scaffold `openspec/` + `AGENTS.md` if
    this is the first run.
-2. `git checkout main && git pull` — start from the latest main.
+2. `git checkout main && git pull` — start from the latest main. **If concurrent agents may
+   be active (see preflight check 4), use `git worktree add` instead** and do the rest of
+   this loop inside that worktree.
 3. `git checkout -b sswa/<change-name>` — one branch per feature, named after the change.
 4. Generate OpenSpec artifacts (proposal, delta specs, optional design) — see
    `openspec-conventions`.
@@ -104,7 +128,9 @@ archived.
 2. Sync: merge the change's delta specs into `openspec/specs/` (apply order
    RENAMED → REMOVED → MODIFIED → ADDED).
 3. Move `openspec/changes/<name>/` to `openspec/changes/archive/<YYYY-MM-DD>-<name>/`.
-4. Delete the feature branch. Return to main, pull. **Repeat** with the next feature.
+4. Delete the feature branch. If the feature was built in a worktree, `git worktree
+   remove ../<repo>-<change-name>` instead of a plain branch delete. Return to main, pull.
+   **Repeat** with the next feature.
 
 ## Branch naming
 

@@ -25,6 +25,11 @@ step in `/propose` and a single-feature `dev → test → main` flow. One featur
 - Specs in `openspec/specs/` describe how the system behaves **today**; future behavior lives in
   a change under `openspec/changes/`.
 - Branch per feature: `sswa/<change-name>`.
+- **Concurrent agents → use a worktree, not a shared checkout.** If more than one agent
+  session may be active in this repo at once, each gets its own
+  `git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/main` instead of
+  checking out branches in the same working directory. A shared checkout is mutable state
+  one agent's branch switch/commit can corrupt under another mid-edit.
 
 ## Project context
 <!-- Stack, key commands (test/build/lint), conventions, constraints. Fill this in. -->

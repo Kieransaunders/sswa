@@ -32,6 +32,14 @@ git checkout -b sswa/<change-name>
 Pick a kebab-case, verb-led `<change-name>`. If the input was a vague idea rather than a
 name, confirm the name with the user first.
 
+**If another agent/session may be active in this same repo, use a worktree instead** (see
+`single-feature-flow` preflight check 4) so the two never share a mutable checkout:
+```bash
+git fetch origin
+git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/main
+```
+Then run every remaining step of propose/apply/verify from inside that worktree directory.
+
 ## Step 2 — OpenSpec artifacts (see openspec-conventions)
 Create `openspec/changes/<change-name>/`:
 - **proposal.md** — Why · What Changes · Capabilities (kebab-case New/Modified) · Impact.

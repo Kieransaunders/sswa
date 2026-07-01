@@ -29,6 +29,8 @@ Archive the SSWA change: ${1:-the active change}. Read `single-feature-flow` and
    git branch -d sswa/<change-name>
    git push origin --delete sswa/<change-name>
    ```
+   If the change was built in a worktree (concurrent-agent case), remove that instead of a
+   plain branch delete: `git worktree remove ../<repo>-<change-name>`.
 5. **Report and loop:** confirm the source-of-truth specs now reflect the shipped behavior,
    then prompt the next feature: `/sswa:propose <next idea>`. One feature at a time —
    *so say we all.*
