@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "So Say We All — OpenSpec's opsx commands, renamed, with TDD-first proposals and a single-feature dev→test→main flow.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {

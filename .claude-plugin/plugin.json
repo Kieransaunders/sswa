@@ -1,6 +1,6 @@
 {
   "name": "sswa",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "So Say We All — a faithful rename of OpenSpec's opsx workflow (explore, propose, apply, verify, sync, archive) with a TDD RED step baked into /propose and a single-feature dev→test→main shipping flow.",
   "author": {
     "name": "Kieran Saunders",

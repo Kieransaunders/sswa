@@ -1,5 +1,7 @@
 ---
 description: Merge a change's delta specs into the source of truth (openspec/specs/) without archiving yet. (mirrors /opsx:sync)
+argument-hint: "[change-name]"
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Merge the delta specs for change: ${1:-the active change} into `openspec/specs/`. Read

@@ -1,5 +1,7 @@
 ---
 description: Validate the implementation against the change's artifacts and run the full suite — then push, open the PR, and promote to the test environment. (mirrors /opsx:verify, plus the PR + test-env promotion)
+argument-hint: "[change-name]"
+allowed-tools: Bash, Read, Grep, Glob
 ---
 
 Verify the SSWA change: ${1:-the active change}. This is `/opsx:verify` (validate

@@ -1,5 +1,7 @@
 ---
 description: Implement the active change to GREEN — turn each failing test green one at a time, checking off tasks. (mirrors /opsx:apply)
+argument-hint: "[change-name]"
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Implement the SSWA change: ${1:-the active change under openspec/changes/}.
@@ -8,7 +10,9 @@ Read `single-feature-flow`, `test-driven-development`, and `openspec-conventions
 
 ## Preflight
 Run the single-feature-flow preflight (environment flag + CLAUDE.md symlink). Confirm you
-are on the change's `sswa/<change-name>` branch; if not, check it out.
+are on the change's `sswa/<change-name>` branch; if not, check it out — or, if propose
+created a worktree for this change (concurrent-agent case), `cd` into that worktree
+directory instead of checking out the branch in the current one.
 
 ## GREEN — one test at a time
 The failing tests already exist (written at propose time). Now make them pass:

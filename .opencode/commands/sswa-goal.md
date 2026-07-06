@@ -1,5 +1,7 @@
 ---
 description: "Full-flow automation: propose + implement + verify in one command. After user accepts the proposal, runs apply and verify automatically without stopping for approval at each step."
+argument-hint: "<change-name or idea>"
+allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
 Run the complete SSWA feature flow end-to-end: propose → apply → verify.
@@ -34,7 +36,10 @@ and `test-driven-development`.
 Run the `/sswa:propose` logic:
 1. Detect the repository's default branch (e.g., via `git symbolic-ref refs/remotes/origin/HEAD`)
    and pull from it: `git checkout <default-branch> && git pull`
-2. `git checkout -b sswa/<change-name>`
+2. `git checkout -b sswa/<change-name>` — **or, if another agent/session may be active in
+   this repo concurrently, isolate with a worktree instead**:
+   `git fetch origin && git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/<default-branch>`,
+   then run every remaining step from inside it.
 3. Create OpenSpec artifacts under `openspec/changes/<change-name>/`:
    - `proposal.md` — Why · What Changes · Capabilities · Impact
    - `specs/<capability>/spec.md` — delta specs (one per capability) with ADDED/MODIFIED/REMOVED/RENAMED Requirements and ≥1 Scenario per requirement
