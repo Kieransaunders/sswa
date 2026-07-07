@@ -1,17 +1,17 @@
 ---
 name: single-feature-flow
-description: Use at the start of every SSWA command (propose/apply/verify/sync/archive) and whenever managing branches or environments. Defines the preflight safety checks (environment flag + CLAUDE.md↔AGENTS.md symlink) and the one-feature-at-a-time dev→test→main shipping loop.
+description: Use at the start of every SSWA command (propose/apply/verify/sync/archive) and whenever managing branches or environments. Defines the preflight safety checks (environment flag + CLAUDE.md↔AGENTS.md symlink) and the one-feature-at-a-time shipping loop.
 ---
 
 # Single-Feature Flow
 
 SSWA ships **one feature at a time** through a fixed loop. The discipline is the point:
-small, reviewable, fully-tested increments that promote cleanly from development to test
-to main, then repeat.
+small, reviewable, fully-tested increments that get verified working, then promote
+cleanly to main, then repeat.
 
 ```
 pull main → new branch → propose (+RED tests) → apply (GREEN)
-          → verify (validate + push + PR + promote to test env)
+          → verify (validate + push + PR + verify the live change)
           → merge to main → archive → repeat
 ```
 
@@ -47,8 +47,13 @@ grep -iE '^\s*-?\s*environment:\s*(development|test)\b' AGENTS.md
 - **Missing or not development/test** → STOP. Tell the user the environment is not flagged
   as development or test. (On the very first `/sswa:propose`, scaffold it instead — see
   that command's Step 0.) Do not run git or file mutations against an unflagged repo.
-- Record which environment you are in; later steps depend on it (proposing/applying happens
-  in **development**; promoting a PR happens in **test**).
+- Record which environment you are in. `development` covers the whole loop end-to-end
+  for most projects, including verify's live-verification step. A separate `test`-flagged
+  checkout is only relevant if the project genuinely maintains one — don't assume every
+  project has one; check the project's own docs (`AGENTS.md`, `README`) for how it
+  actually verifies working branches (a test-environment checkout, a preview-deploy
+  script, a local-preview technique like a symlinked worktree, etc.) before looking for
+  a specific mechanism.
 
 ### 2. Agent-sync guard — CLAUDE.md is a symlink to AGENTS.md (warn, offer to fix)
 
@@ -119,8 +124,15 @@ mid-edit and branches end up intertwined.
 1. Preflight. Validate the implementation against the artifacts; confirm the full suite is
    green and every task is checked.
 2. Push the branch and open a **PR** into main.
-3. **Promote to the test environment:** pull the branch into the test-env checkout and run
-   the full suite there. The PR merges to main only after test-env is green.
+3. **Verify the live change:** don't assume a separate test-environment checkout exists —
+   check the project's own docs first. If it genuinely maintains one (`AGENTS.md` flags
+   `environment: test` somewhere), pull the branch there and run the full suite. Otherwise
+   use whatever verification mechanism the project actually provides (a documented
+   local-preview technique, a preview-deploy script, `docker-compose up`, etc.) — for a
+   UI/browser-facing change this usually means starting the app and clicking through the
+   scenarios in `tasks.md`'s manual-verification section, not just running unit tests.
+   Skip this step only for changes with no observable behavior (pure refactors, doc-only
+   changes). The PR merges to main only after this passes.
 4. On approval, **merge to main** (you do this; `/sswa:archive` then confirms it).
 
 ### Close it — `/sswa:archive`
