@@ -31,6 +31,12 @@ Archive the SSWA change: ${1:-the active change}. Read `single-feature-flow` and
    ```
    If the change was built in a worktree (concurrent-agent case), remove that instead of a
    plain branch delete: `git worktree remove ../<repo>-<change-name>`.
-5. **Report and loop:** confirm the source-of-truth specs now reflect the shipped behavior,
+5. **Optional repo hygiene sweep:** offer to run the repo-wide tidy-up from
+   `single-feature-flow` → **Repo hygiene sweep** — prune *other* merged branches (local +
+   remote), dead worktrees left by concurrent-agent runs, and orphaned stashes. It is
+   **destructive: survey → classify shipped vs live → get explicit sign-off before
+   deleting.** Never prune a branch with an open PR or the worktree this session runs in.
+   Skip entirely if the user declines.
+6. **Report and loop:** confirm the source-of-truth specs now reflect the shipped behavior,
    then prompt the next feature: `/sswa:propose <next idea>`. One feature at a time —
    *so say we all.*
