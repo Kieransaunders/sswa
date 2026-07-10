@@ -1,26 +1,33 @@
 ---
 name: single-feature-flow
-description: Use at the start of every SSWA command (propose/apply/verify/sync/archive) and whenever managing branches or environments. Defines the preflight safety checks (environment flag + CLAUDE.md↔AGENTS.md symlink) and the one-feature-at-a-time shipping loop.
+description: Use at the start of every SSWA command (propose/apply/verify/sync/archive) and whenever managing branches or environments. Defines the preflight safety checks (environment flag + CLAUDE.md↔AGENTS.md symlink) and the parallel-develop / serial-ship loop — many features in flight via worktrees, one merged to main at a time.
 ---
 
 # Single-Feature Flow
 
-SSWA ships **one feature at a time** through a fixed loop. The discipline is the point:
-small, reviewable, fully-tested increments that get verified working, then promote
-cleanly to main, then repeat.
+SSWA **ships one feature to main at a time** — but you may **develop several in parallel**,
+each in its own git worktree. The discipline is at the finish line, not the workbench:
+small, reviewable, fully-tested increments that get verified working, then promote cleanly
+to main, **one merge at a time**.
 
 ```
-pull main → new branch → propose (+RED tests) → apply (GREEN)
-          → verify (validate + push + PR + verify the live change)
-          → merge to main → archive → repeat
+pull main → worktree per feature → propose (+RED tests) → apply (GREEN)   ┐ parallel
+          → verify (validate + push + PR + verify the live change)        ┘ (disjoint)
+          → merge to main → archive                                        · serial
 ```
+
+Parallel is safe **only for disjoint features** — ones touching different spec capabilities
+and different source files. Overlapping features get sequenced, not parallelised (preflight
+check 3).
 
 The command names are OpenSpec's `opsx` set, renamed `sswa:`. The git/environment steps
 are folded **into** those commands — SSWA does not invent extra commands for branching,
 PRs, or promotion.
 
-If more than one agent may be active in this repo at once, "new branch" above means a
-**git worktree**, not a checkout in the shared directory — see preflight check 4 below.
+Each feature gets its own **git worktree** branched from `origin/main`, not a checkout in a
+shared directory (see preflight check 4). Worktrees make the *working directory* safe to
+parallelise; the serialisation that remains is at *merge/promote* time (preflight check 3) —
+one `main`, one `openspec/specs/`, and one test environment if the project keeps one.
 
 ## Preflight — run before any mutating command
 
@@ -71,43 +78,59 @@ it so Claude Code and any other agents read the same file and stay in sync.
   ```
   Never silently overwrite a non-symlink `CLAUDE.md` that has unique content.
 
-### 3. One-feature lock (warn only)
+### 3. Shipping-lane lock + disjointness (warn only)
 
-Look for change folders under `openspec/changes/` (excluding `archive/`) that are not yet
-archived.
+Multiple changes may be in flight at once — that is fine when they are **disjoint**. What
+must stay serial is the **finish line** (`/sswa:verify` → merge → `/sswa:archive`), because
+all changes share one `main` and one `openspec/specs/` (plus one test environment, if the
+project keeps one). Worktrees (check 4) removed the working-directory danger; they did
+**not** remove this one.
 
-- **Another change is in flight** → warn: "<name> is still active — SSWA is one feature at
-  a time. Finish/ship it before starting another?" Then let the user proceed if they
-  insist. Do not hard-block.
+Look for other change folders under `openspec/changes/` (excluding `archive/`). For each,
+compare it to the change you are starting:
 
-### 4. Concurrent-agent check (warn, then isolate)
+- **Overlapping** — it declares a delta for the same capability (`specs/<capability>/`) or
+  edits the same source files → warn: "<name> touches the same specs/files — sequence these
+  or expect merge/sync conflicts." Recommend finishing one before proposing the other.
+- **Disjoint** — different capabilities and different files → fine to develop in parallel.
+- **Any change currently mid-verify/merge** (it owns the ship lane) → warn: finish
+  shipping it before you promote this one. The ship lane is single-file.
 
-A shared working directory is mutable state: if another agent (or you, in another
-session) might check out a branch or commit in this same directory while this change is
-in flight, one agent's `git checkout`/commit changes the files out from under the other
-mid-edit and branches end up intertwined.
+Never hard-block — warn and let the user decide.
 
-- **Ask or infer** whether another agent/session may touch this repo concurrently. If yes
-  (or unsure and the cost of asking is low), **use a worktree instead of branching in
-  place** for Step 2/3 of `/sswa:propose` below:
+### 4. Isolate each feature in a worktree (default when work runs in parallel)
+
+A shared working directory is mutable state: if another agent (or you, in another session)
+checks out a branch or commits in the same directory while this change is in flight, one
+agent's `git checkout`/commit changes the files out from under the other mid-edit and
+branches intertwine. A worktree removes this entirely — its own checkout, own HEAD, own
+index.
+
+- **Default for any parallel work: one worktree per feature**, branched from `origin/main`:
   ```bash
   git fetch origin
   git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/main
   ```
-  Do the rest of propose/apply/verify inside that worktree directory. On archive, remove
-  it (`git worktree remove ../<repo>-<change-name>`) instead of just deleting the branch.
-- **Single-agent, single-session work** can keep branching in place as written below —
-  worktrees are for concurrency isolation, not a mandatory replacement.
+  Do the rest of propose/apply/verify inside that worktree. On archive, `git worktree
+  remove ../<repo>-<change-name>` instead of just deleting the branch.
+- **Branch each worktree from `origin/main`, never from another feature's branch** — that
+  independence is what lets disjoint features merge back in any order.
+- Worktrees fix the *working-directory* danger only. The *finish-line* danger (shared main,
+  specs, and any test env) is governed by check 3 — parallelise development, serialise shipping.
+- **A single quick change with nothing else in flight** can branch in place — worktrees are
+  the tool for isolation, not a mandatory replacement.
 
 ## The loop, step by step
 
 ### Start a feature — `/sswa:propose`
 1. Preflight (expect environment: **development**). Scaffold `openspec/` + `AGENTS.md` if
    this is the first run.
-2. `git checkout main && git pull` — start from the latest main. **If concurrent agents may
-   be active (see preflight check 4), use `git worktree add` instead** and do the rest of
-   this loop inside that worktree.
-3. `git checkout -b sswa/<change-name>` — one branch per feature, named after the change.
+2. Start from the latest main. **Default: `git worktree add ../<repo>-<change-name> -b
+   sswa/<change-name> origin/main`** (see preflight check 4) and do the rest of this loop
+   inside that worktree. A lone quick change with nothing else in flight may instead
+   `git checkout main && git pull`.
+3. One branch per feature, named after the change (`sswa/<change-name>`) — created by the
+   worktree add above, or `git checkout -b` if branching in place.
 4. Generate OpenSpec artifacts (proposal, delta specs, optional design) — see
    `openspec-conventions`.
 5. Write the **failing tests (RED)** for every scenario — see `test-driven-development`.
@@ -143,8 +166,9 @@ mid-edit and branches end up intertwined.
 4. Delete the feature branch. If the feature was built in a worktree, `git worktree
    remove ../<repo>-<change-name>` instead of a plain branch delete. Return to main, pull.
 5. Optionally run the **Repo hygiene sweep** (above) to prune *other* merged branches, dead
-   worktrees, and orphaned stashes — survey, confirm, then prune. **Repeat** with the next
-   feature.
+   worktrees, and orphaned stashes — survey, confirm, then prune.
+6. **Repeat** — or, if disjoint features were developed in parallel, promote the next one
+   through verify → merge → archive (the ship lane is serial; see preflight check 3).
 
 ## Branch naming
 

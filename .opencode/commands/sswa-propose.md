@@ -21,24 +21,27 @@ propose time**, as artifacts of the change. Read three skills before doing anyth
    anything else, STOP.
 3. **Agent-sync guard:** confirm `CLAUDE.md` is a symlink to `AGENTS.md`. If not, warn and
    offer to fix before continuing.
-4. **One-feature lock (warn only):** if another change under `openspec/changes/` is not yet
-   archived, warn that SSWA is one feature at a time and let the user decide.
+4. **Shipping-lane lock + disjointness (warn only):** other changes under
+   `openspec/changes/` may be in flight — fine when they are **disjoint** (different spec
+   capabilities and source files). Warn if this change **overlaps** one (sequence them, or
+   expect merge/sync conflicts), or if another change is mid-verify/merge (the ship lane is
+   serial). Let the user decide. See `single-feature-flow` preflight check 3.
 
-## Step 1 — Branch from latest main
+## Step 1 — Worktree from latest main
+Default: give each feature its own worktree so parallel, disjoint features never share a
+mutable checkout (see `single-feature-flow` preflight check 4):
+```bash
+git fetch origin
+git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/main
+```
+Run every remaining step of propose/apply/verify from inside that worktree directory. A
+lone quick change with nothing else in flight may instead branch in place:
 ```bash
 git checkout main && git pull
 git checkout -b sswa/<change-name>
 ```
 Pick a kebab-case, verb-led `<change-name>`. If the input was a vague idea rather than a
 name, confirm the name with the user first.
-
-**If another agent/session may be active in this same repo, use a worktree instead** (see
-`single-feature-flow` preflight check 4) so the two never share a mutable checkout:
-```bash
-git fetch origin
-git worktree add ../<repo>-<change-name> -b sswa/<change-name> origin/main
-```
-Then run every remaining step of propose/apply/verify from inside that worktree directory.
 
 ## Step 2 — OpenSpec artifacts (see openspec-conventions)
 Create `openspec/changes/<change-name>/`:
