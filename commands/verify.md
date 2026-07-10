@@ -37,7 +37,19 @@ delete anything here — the feature isn't merged yet, so pruning is archive's j
 Run the full test suite. If anything is red or any task is unchecked, STOP and go back to
 `/sswa:apply`.
 
-## 3. Push + open PR
+## 3. Build + visual smoke test (if front-end assets changed)
+Automated tests don't catch "does this actually look right." If the change touched
+front-end assets (CSS/JS/TS under `assets/src/`, Divi module source, templates, etc.):
+- Run the project's build (e.g. `npm run build`) so compiled output (`assets/dist/`) is current.
+- Get the change loaded somewhere it can actually be seen — check out the branch/worktree
+  into the dev environment (or copy the built/changed files into the active plugin dir if
+  switching branches would collide with other uncommitted work) and reload the page. Don't
+  just ask if the user wants to see it — do it, per the "just do it" rule in
+  `single-feature-flow`.
+- Confirm the visual result matches the spec/mockup before moving on. A green test suite
+  with a wrong-looking page is not a pass.
+
+## 4. Push + open PR
 ```bash
 git push -u origin sswa/<change-name>
 ```
@@ -46,7 +58,7 @@ proposal's Why / What Changes / Impact, the capabilities list, and a note that t
 shipped failing-test-first (link the RED proof). Use `gh pr create` or the repo's GitHub
 tooling.
 
-## 4. Verify the live change
+## 5. Verify the live change
 Don't assume a separate test-environment checkout exists — check the project's own docs
 (`AGENTS.md`, `README`) for how it actually verifies working branches first:
 - **If the project genuinely maintains a test-environment checkout** (its `AGENTS.md`
@@ -59,10 +71,11 @@ Don't assume a separate test-environment checkout exists — check the project's
   through the scenarios in `tasks.md`'s manual-verification section — don't rely on unit
   tests alone to certify a user-facing change. If a scenario needs live third-party data
   unavailable in this environment, mock the call instead of skipping the check.
+- For a front-end change this is the live version of the build + visual check in step 3.
 - Skip this step only for changes with no observable behavior (pure refactors, doc-only
   changes).
 - Report pass/fail per scenario. The change is cleared to merge only when this is green.
 
-## 5. Next
+## 6. Next
 On review approval **and** a green live verification, merge the PR to `main` (squash per
 repo convention). Once merged, run `/sswa:archive` to close it out.
